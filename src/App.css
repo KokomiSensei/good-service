@@ -1,0 +1,6 @@
+/* App组件的样式 */
+
+/* 自定义Header样式 */
+.custom-header {
+  color: var(--text-main) !important;
+}

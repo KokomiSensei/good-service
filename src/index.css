@@ -1,0 +1,35 @@
+:root {
+  /* 品牌主色 */
+  --primary-color: #ff6b35; /* 活力橙红 */
+  --primary-hover: #ff8e66;
+  --primary-active: #cc4e22;
+
+  /* 背景色 */
+  --bg-body: #f7f4f0; /* 极淡的暖米色，比冷灰更温馨 */
+  --bg-container: #ffffff;
+
+  /* 文字颜色 - 稍微带一点点暖色调的黑 */
+  --text-main: #474d4e;
+  --text-secondary: #636e72;
+  --text-disabled: #b2bec3;
+
+  /* 功能色 */
+  --success-color: #8bcbbe; /* 这种绿色配橙色很好看 */
+  --warning-color: #fdcb6e;
+  --error-color: #e98b8b;
+  --link-color: #e17055;
+
+  --border-color: #dfe6e9;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-body);
+  color: var(--text-main);
+}

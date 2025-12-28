@@ -4,16 +4,37 @@ import { getAllDemands, publishDemand, updateDemand, getDemandById, getMyDemands
 import { getAllServiceTypes } from "../../api/modules/service";
 import { searchLocations } from "../../api/modules/location";
 import { getMyResponses, submitResponse, updateResponse, deleteResponse, acceptResponse, rejectResponse } from "../../api/modules/response";
+import { getUserInfo } from "../../api/modules/user";
 
+const userInfo = getUserInfo();
 // 数据处理工具函数
 const processApiData = (apiData, serviceTypeMap = {}, locationMap = {}) => {
   return apiData.map(item => {
     // 将时间戳转换为Date对象
     const convertTimestamp = (timestamp) => {
-      if (timestamp && typeof timestamp.seconds === 'number') {
+      if (!timestamp) {
+        return null; // 如果timestamp是null或undefined，返回null
+      }
+      if (typeof timestamp.seconds === 'number') {
         return new Date(timestamp.seconds * 1000 + (timestamp.nanos || 0) / 1000000);
       }
-      return new Date();
+      if (typeof timestamp === 'string') {
+        // 尝试解析ISO 8601字符串
+        const parsedDate = new Date(timestamp);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate;
+        }
+      }
+      if (typeof timestamp === 'number') {
+        // 尝试解析Unix时间戳（秒）
+        if (timestamp > 1000000000000) { // 如果大于这个值，可能是毫秒时间戳
+          return new Date(timestamp);
+        } else { // 否则是秒时间戳
+          return new Date(timestamp * 1000);
+        }
+      }
+      console.warn('无法解析时间戳:', timestamp, '返回当前时间');
+      return new Date(); // 如果所有格式都无法解析，返回当前时间（作为最后的回退）
     };
     
     // 默认映射
@@ -45,8 +66,8 @@ const processApiData = (apiData, serviceTypeMap = {}, locationMap = {}) => {
       title: item.title || "未命名需求",
       description: item.description || "暂无描述",
       status: item.status || "PUBLISHED",
-      createTime: convertTimestamp(item.createdAt).toISOString(),
-      updateTime: convertTimestamp(item.modifiedAt).toISOString(),
+      createTime: convertTimestamp(item.createdAt)?.toISOString() || null,
+      updateTime: convertTimestamp(item.modifiedAt)?.toISOString() || null,
       address: finalLocationMap[item.locationId] || "地址未知",
       // 保留原始API数据
       originalData: item
@@ -99,7 +120,6 @@ export const useDemandStore = create(
           });
         }
       },
-
       // 获取所有需求（本地数据）
       getAllDemands: () => {
         set({ filteredDemands: get().demands });
@@ -356,12 +376,12 @@ export const useDemandStore = create(
             serviceId: demandData.serviceId || get().getServiceIdFromTypeName(demandData.type) || 1,
             title: demandData.title || "",
             description: demandData.description || "",
-            startTime: demandData.startTime || { seconds: Math.floor(Date.now() / 1000), nanos: 0 },
-            endTime: demandData.endTime || { seconds: Math.floor(Date.now() / 1000) + 86400, nanos: 0 }
+            startTime: demandData.startTime || new Date().toISOString(),
+            endTime: demandData.endTime || new Date(Date.now() + 86400000).toISOString() // 24小时后
           };
           
           // 调用API创建需求
-          const response = await publishDemand(demandData.userId, apiData);
+          const response = await publishDemand(userInfo.id, apiData);
           const apiResponse = response.data || response;
           
           // 处理API返回的数据
@@ -428,15 +448,15 @@ export const useDemandStore = create(
             }
           }
           
-          // 准备API数据格式
-          const apiData = {
-            locationId: locationId,
-            serviceId: updateData.serviceId || get().getServiceIdFromTypeName(updateData.type) || 1,
-            title: updateData.title || "",
-            description: updateData.description || "",
-            startTime: updateData.startTime || { seconds: Math.floor(Date.now() / 1000), nanos: 0 },
-            endTime: updateData.endTime || { seconds: Math.floor(Date.now() / 1000) + 86400, nanos: 0 }
-          };
+           // 准备API数据格式
+           const apiData = {
+             locationId: locationId,
+             serviceId: updateData.serviceId || get().getServiceIdFromTypeName(updateData.type) || 1,
+             title: updateData.title || "",
+             description: updateData.description || "",
+             startTime: updateData.startTime || new Date().toISOString(),
+             endTime: updateData.endTime || new Date(Date.now() + 86400000).toISOString() // 24小时后
+           };
           
           // 调用API更新需求
           const response = await updateDemand(parseInt(id), apiData);
@@ -702,6 +722,9 @@ export const useDemandStore = create(
       // 更新服务响应
       updateServiceResponse: async (id, updateData) => {
         const { serviceResponses } = get();
+        
+        // 确保 serviceResponses 是数组
+        const responses = serviceResponses || [];
 
         try {
           // 调用API更新响应
@@ -711,13 +734,26 @@ export const useDemandStore = create(
           // 处理API返回的数据
           const updatedApiResponse = {
             id: apiData.id?.toString() || id,
-            responseTime: apiData.modifiedAt ? new Date(apiData.modifiedAt.seconds * 1000).toISOString() : new Date().toISOString(),
+            responseTime: (() => {
+              try {
+                if (apiData.modifiedAt && typeof apiData.modifiedAt.seconds === 'number') {
+                  const date = new Date(apiData.modifiedAt.seconds * 1000);
+                  if (!isNaN(date.getTime())) {
+                    return date.toISOString();
+                  }
+                }
+                return new Date().toISOString();
+              } catch (error) {
+                console.warn('时间转换失败，使用当前时间:', error);
+                return new Date().toISOString();
+              }
+            })(),
             status: apiData.status || "PENDING",
             ...updateData,
             originalData: apiData
           };
 
-          const updatedResponses = serviceResponses.map((response) =>
+          const updatedResponses = responses.map((response) =>
             response.id === id ? { ...response, ...updatedApiResponse } : response
           );
 
@@ -734,7 +770,7 @@ export const useDemandStore = create(
           console.error('更新响应失败:', error);
           
           // 如果API调用失败，回退到本地更新
-          const updatedResponses = serviceResponses.map((response) =>
+          const updatedResponses = responses.map((response) =>
             response.id === id ? { ...response, ...updateData, updateTime: new Date().toISOString() } : response
           );
 

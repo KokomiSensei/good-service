@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatTime } from '../../utils/timeUtils';
 import {
   Card,
   Select,
@@ -54,7 +55,7 @@ const INeed = () => {
   // 初始化加载当前用户的所有需求
   useEffect(() => {
     const loadMyDemands = async () => {
-      if (isLoggedIn && userInfo?.id) {
+      if (isLoggedIn) {
         try {
           await filterByUserId(userInfo.id);
         } catch (error) {
@@ -288,7 +289,7 @@ const INeed = () => {
                         }}
                       >
                         <span>{demand.title}</span>
-                        <Tag color="default" style={{ backgroundColor: '#f0f0f0' }}>
+                        <Tag color={statusColorMap[demand.status]}>
                           {demand.status}
                         </Tag>
                       </div>
@@ -372,7 +373,7 @@ const INeed = () => {
                         color: "#999",
                       }}
                     >
-                      <strong>创建时间:</strong> {new Date(demand.createTime).toLocaleString()}
+                      <strong>创建时间:</strong> {formatTime(demand.createTime, 'YYYY-MM-DD HH:mm:ss')}
                     </div>
       <div
         style={{
@@ -381,7 +382,7 @@ const INeed = () => {
           marginTop: "auto",
         }}
       >
-        <strong>更新时间:</strong> {new Date(demand.updateTime).toLocaleString()}
+        <strong>更新时间:</strong> {formatTime(demand.updateTime, 'YYYY-MM-DD HH:mm:ss')}
       </div>
     </Card>
   </Col>

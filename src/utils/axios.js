@@ -11,7 +11,7 @@ import {
 // 创建axios实例
 const instance = axios.create({
   baseURL: process.env.NODE_ENV === 'development' 
-    ? "http://127.0.0.1:4523/m1/7558505-7295959-default/api" 
+    ? "http://10.29.127.241:8080/api" 
     : "/api",
   timeout: 10000,
   headers: {

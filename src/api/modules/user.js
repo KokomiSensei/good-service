@@ -6,6 +6,23 @@ import request from '../../utils/axios';
  */
 
 /**
+ * 从本地存储获取用户信息
+ * @returns {Object|null} 用户信息对象或null
+ */
+export const getUserInfo = () => {
+  try {
+    const userStorage = localStorage.getItem('user-storage');
+    if (userStorage) {
+      const userData = JSON.parse(userStorage);
+      return userData?.state?.userInfo || null;
+    }
+  } catch (error) {
+    console.warn('解析用户存储数据失败:', error);
+  }
+  return null;
+};
+
+/**
  * 获取用户详情
  * @param {string} username - 用户名
  * @returns {Promise} 用户详情
@@ -64,7 +81,11 @@ export const updateUserByPut = (username, userData) => {
   return request({
     url: `/users/${username}`,
     method: 'put',
-    data: userData,
+    data: {
+      realName: userData.realName,
+      phone: userData.phone,
+      biography: userData.biography,
+    },
   });
 };
 
@@ -97,6 +118,9 @@ export const updateUserPassword = (username, passwordData) => {
   return request({
     url: `/users/password/${username}`,
     method: 'put',
-    data: passwordData,
+    data: {
+      oldPassword: passwordData.oldPassword,
+      newPassword: passwordData.newPassword,
+    },
   });
 };

@@ -13,10 +13,10 @@ import request from '../../utils/axios';
  * @returns {Promise} 登录结果
  */
 export const login = (credentials) => {
+  const { username, password } = credentials;
   return request({
-    url: '/auth/login',
+    url: `/auth/login?username=${username}&password=${password}`,
     method: 'post',
-    data: credentials,
   });
 };
 
@@ -28,10 +28,10 @@ export const login = (credentials) => {
  * @returns {Promise} 注册结果
  */
 export const register = (userData) => {
+  const { username, password } = userData;
   return request({
-    url: '/auth/register',
+    url: `/auth/register?username=${username}&password=${password}`,
     method: 'post',
-    data: userData,
   });
 };
 
@@ -43,9 +43,9 @@ export const register = (userData) => {
  * @returns {Promise} 注册结果
  */
 export const registerAdmin = (adminData) => {
+  const { username, password } = adminData;
   return request({
-    url: '/auth/register-admin',
+    url: `/auth/register-admin?username=${username}&password=${password}`,
     method: 'post',
-    data: adminData,
   });
 };

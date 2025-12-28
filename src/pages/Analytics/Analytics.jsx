@@ -12,22 +12,28 @@ import {
   Space,
   Spin,
   Alert,
+  Result,
 } from "antd";
 import {
   SearchOutlined,
   BarChartOutlined,
   LineChartOutlined,
+  LockOutlined,
 } from "@ant-design/icons";
 import { searchByLocationAndTime } from "../../api/modules/demand";
+import { getMonthlyCreationStatistics, getMonthlyRespondedStatistics } from "../../api/modules/statistics";
+import { searchLocations } from "../../api/modules/location";
 import CascadeAddressSelector from "../../components/CascadeAddressSelector";
 import ReactECharts from "echarts-for-react";
 import moment from "moment";
+import { useUserStore } from "../../store/modules/userStore";
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const Analytics = () => {
+  const { userInfo } = useUserStore();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [chartType, setChartType] = useState("line"); // line or bar
@@ -35,6 +41,27 @@ const Analytics = () => {
   const [chartData, setChartData] = useState(null);
   const [apiError, setApiError] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
+
+  // 检查用户权限
+  const isAdmin = userInfo?.username === 'admin';
+
+  // 如果不是admin用户，显示权限提示
+  if (!isAdmin) {
+    return (
+      <div style={{ padding: "20px", background: "#f0f2f5", minHeight: "100vh" }}>
+        <Result
+          icon={<LockOutlined style={{ color: '#ff4d4f' }} />}
+          title="访问受限"
+          subTitle="对不起，只有管理员可以查看统计分析页面。"
+          extra={
+            <Button type="primary" href="/">
+              返回首页
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
 
   // 表格列配置
   const columns = [
@@ -74,6 +101,40 @@ const Analytics = () => {
     },
   ];
 
+  // 获取地点ID的辅助函数
+  const getLocationIds = async (location) => {
+    let locationIds = [];
+    
+    // 如果用户选择了地点，先调用地点搜索API获取location ID
+    if (location && location.fullAddress && location.fullAddress !== '全部地域') {
+      try {
+        // 优先使用区县名称，如果没有区县则使用城市名称
+        const searchKeyword = location.item || location.city || location.province;
+        console.log('搜索地点关键词:', searchKeyword);
+        
+        const searchResponse = await searchLocations(searchKeyword);
+        console.log('地点搜索结果:', searchResponse);
+        
+        // 从搜索结果中提取location ID
+        if (searchResponse && Array.isArray(searchResponse)) {
+          locationIds = searchResponse.map(loc => loc.id).filter(id => id);
+        } else if (searchResponse && searchResponse.id) {
+          locationIds = [searchResponse.id];
+        }
+        
+        console.log('提取的location IDs:', locationIds);
+      } catch (searchError) {
+        console.warn('地点搜索失败，使用原有itemId:', searchError);
+        // 如果搜索失败，回退到使用原有的itemId
+        if (location.itemId) {
+          locationIds = [location.itemId];
+        }
+      }
+    }
+    
+    return locationIds;
+  };
+
   // 默认查询最近6个月的数据
   useEffect(() => {
     const endDate = moment();
@@ -89,14 +150,34 @@ const Analytics = () => {
       setApiError(null);
 
       try {
+        // 获取地点ID（初始查询时没有选择地点，所以会返回空数组）
+        const locationIds = await getLocationIds(selectedLocation);
+
         const requestParams = {
-          seconds: Math.floor(startDate.valueOf() / 1000),
-          nanos: 0,
+          matchLocationIds: locationIds,
+          matchServiceTypeIds: [],
+          earliestCreateTime: startDate.toDate(),
+          latestCreateTime: endDate.toDate(),
         };
 
-        const response = await searchByLocationAndTime(requestParams);
-        const apiData = response.data || response;
-        const processedData = processApiResponse(apiData, startDate, endDate);
+        console.log('初始查询API请求参数:', requestParams);
+
+        // 调用统计API获取数据
+        const [creationResponse, respondedResponse] = await Promise.all([
+          getMonthlyCreationStatistics(requestParams),
+          getMonthlyRespondedStatistics(requestParams)
+        ]);
+
+        console.log('初始创建统计API响应:', creationResponse);
+        console.log('初始响应统计API响应:', respondedResponse);
+
+        // 处理API返回的数据
+        const processedData = processStatisticsApiResponse(
+          creationResponse.data || creationResponse,
+          respondedResponse.data || respondedResponse,
+          startDate,
+          endDate
+        );
         
         setStatisticsData(processedData);
         prepareChartData(processedData);
@@ -123,24 +204,35 @@ const Analytics = () => {
       const startDate = dateRange[0];
       const endDate = dateRange[1];
 
+      // 获取地点ID
+      const locationIds = await getLocationIds(selectedLocation);
+
       // 准备API请求参数
       const requestParams = {
-        // 将moment对象转换为时间戳
-        seconds: Math.floor(startDate.valueOf() / 1000),
-        nanos: 0,
+        matchLocationIds: locationIds,
+        matchServiceTypeIds: [],
+        earliestCreateTime: startDate.toDate(),
+        latestCreateTime: endDate.toDate(),
       };
 
-      // 如果选择了具体地域，添加locationIds参数
-      if (selectedLocation && selectedLocation.itemId) {
-        requestParams.locationIds = [selectedLocation.itemId];
-      }
+      console.log('统计API请求参数:', requestParams);
 
-      // 调用API获取数据
-      const response = await searchByLocationAndTime(requestParams);
-      const apiData = response.data || response;
+      // 调用统计API获取数据
+      const [creationResponse, respondedResponse] = await Promise.all([
+        getMonthlyCreationStatistics(requestParams),
+        getMonthlyRespondedStatistics(requestParams)
+      ]);
+
+      console.log('创建统计API响应:', creationResponse);
+      console.log('响应统计API响应:', respondedResponse);
 
       // 处理API返回的数据
-      const processedData = processApiResponse(apiData, startDate, endDate);
+      const processedData = processStatisticsApiResponse(
+        creationResponse.data || creationResponse,
+        respondedResponse.data || respondedResponse,
+        startDate,
+        endDate
+      );
       
       setStatisticsData(processedData);
       prepareChartData(processedData);
@@ -159,6 +251,56 @@ const Analytics = () => {
   };
 
   // 处理API响应数据
+  const processStatisticsApiResponse = (creationData, respondedData, startDate, endDate) => {
+    // 将API数据转换为Map以便快速查找
+    const creationMap = new Map();
+    const respondedMap = new Map();
+    
+    // 处理创建统计数据
+    if (Array.isArray(creationData)) {
+      creationData.forEach(item => {
+        const key = `${item.year}-${String(item.month).padStart(2, '0')}`;
+        creationMap.set(key, item.count || 0);
+      });
+    }
+    
+    // 处理响应统计数据
+    if (Array.isArray(respondedData)) {
+      respondedData.forEach(item => {
+        const key = `${item.year}-${String(item.month).padStart(2, '0')}`;
+        respondedMap.set(key, item.count || 0);
+      });
+    }
+    
+    // 生成月份数组
+    const months = [];
+    let current = moment(startDate);
+    const end = moment(endDate);
+    
+    while (current.isSameOrBefore(end, 'month')) {
+      months.push(moment(current));
+      current.add(1, 'month');
+    }
+
+    // 按月份统计数据
+    const monthlyStats = months.map((month) => {
+      const monthKey = month.format('YYYY-MM');
+      const creationCount = creationMap.get(monthKey) || 0;
+      const respondedCount = respondedMap.get(monthKey) || 0;
+
+      return {
+        key: monthKey,
+        startDate: month.startOf('month').toDate(),
+        endDate: month.endOf('month').toDate(),
+        region: selectedLocation?.fullAddress || '全部地域',
+        monthlyDemands: creationCount,
+        monthlyResponses: respondedCount,
+      };
+    });
+
+    return monthlyStats;
+  };
+
   const processApiResponse = (apiData, startDate, endDate) => {
     const { content = [] } = apiData;
     
@@ -256,9 +398,14 @@ const Analytics = () => {
 
   // 准备图表数据
   const prepareChartData = (stats) => {
-    const months = stats.map((item) => item.month);
+    const months = stats.map((item) => item.key || item.month);
     const demandCounts = stats.map((item) => item.monthlyDemands);
     const responseCounts = stats.map((item) => item.monthlyResponses);
+
+    console.log('[DEBUG] prepareChartData - stats:', stats);
+    console.log('[DEBUG] prepareChartData - months:', months);
+    console.log('[DEBUG] prepareChartData - demandCounts:', demandCounts);
+    console.log('[DEBUG] prepareChartData - responseCounts:', responseCounts);
 
     setChartData({
       months,

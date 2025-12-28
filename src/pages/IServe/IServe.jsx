@@ -30,6 +30,16 @@ const { Title } = Typography;
 const { Option } = Select;
 const { Search } = Input;
 
+const statusColorMap = {
+  PUBLISHED: 'blue',    // 刚发布 - 蓝色
+  RESPONDED: 'orange',    // 已响应 - 橙色
+  RESOLVED: 'green',     // 已完成 - 绿色
+  CANCELLED: '#999999',    // 已取消 - 灰色
+  待处理: '#1890ff',       // 待处理 - 蓝色
+  PENDING: '#faad14',       // 处理中 - 橙色
+  已完成: '#52c41a',       // 已完成 - 绿色
+};
+
 const IServe = () => {
   const navigate = useNavigate();
 
@@ -47,7 +57,7 @@ const IServe = () => {
   // 初始化加载自己的响应列表
   useEffect(() => {
     const loadMyServiceResponses = async () => {
-      if (isLoggedIn && userInfo?.id) {
+      if (isLoggedIn) {
         try {
           await getMyServiceResponses(userInfo.id);
         } catch (error) {
@@ -134,7 +144,7 @@ const IServe = () => {
       ellipsis: true,
       width: 120,
       render: (status) => (
-        <Tag color="default" style={{ backgroundColor: '#f0f0f0' }}>{status}</Tag>
+        <Tag color={statusColorMap[status]}>{status}</Tag>
       ),
     },
     {

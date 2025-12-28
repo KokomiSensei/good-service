@@ -21,6 +21,9 @@ export * from './modules/response';
 // 需求相关API
 export * from './modules/demand';
 
+// 统计相关API
+export * from './modules/statistics';
+
 // 文件上传相关API
 export * from './modules/file';
 
@@ -34,6 +37,7 @@ import * as locationAPI from './modules/location';
 import * as serviceAPI from './modules/service';
 import * as responseAPI from './modules/response';
 import * as demandAPI from './modules/demand';
+import * as statisticsAPI from './modules/statistics';
 import * as fileAPI from './modules/file';
 import * as demandFileAPI from './modules/demandFile';
 
@@ -45,6 +49,7 @@ const API = {
   service: serviceAPI,
   response: responseAPI,
   demand: demandAPI,
+  statistics: statisticsAPI,
   file: fileAPI,
   demandFile: demandFileAPI,
 };

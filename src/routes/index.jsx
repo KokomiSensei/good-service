@@ -21,6 +21,10 @@ const IServeResponseForm = React.lazy(() =>
 );
 // 统计分析模块相关路由
 const Analytics = React.lazy(() => import("../pages/Analytics/Analytics"));
+// 个人中心相关路由
+const Profile = React.lazy(() => import("../pages/Profile/Profile"));
+// 演示页面路由
+const FileUploadDemo = React.lazy(() => import("../pages/Demo/FileUploadDemo"));
 
 export const router = createBrowserRouter([
   {
@@ -128,6 +132,24 @@ export const router = createBrowserRouter([
         element: (
           <React.Suspense fallback={<div>Loading...</div>}>
             <Analytics />
+          </React.Suspense>
+        ),
+      },
+      // 个人中心相关路由
+      {
+        path: "profile",
+        element: (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <Profile />
+          </React.Suspense>
+        ),
+      },
+      // 演示页面路由
+      {
+        path: "demo/file-upload",
+        element: (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <FileUploadDemo />
           </React.Suspense>
         ),
       },

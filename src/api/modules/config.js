@@ -164,6 +164,12 @@ export const API_ENDPOINTS = {
     OVERVIEW: '/demands/overview',
     TRENDS: '/demands/trends',
   },
+
+  // 统计相关
+  STATISTICS: {
+    DEMAND_CREATION_MONTHLY: '/statistics/demand/creation/monthly',
+    DEMAND_RESPONDED_MONTHLY: '/statistics/demand/responded/monthly',
+  },
 };
 
 // API响应格式

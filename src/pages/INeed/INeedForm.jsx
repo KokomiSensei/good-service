@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Form, Input, Select, Button, Card, Typography, Row, Col, Space, Divider, Spin, message } from 'antd';
+import { Form, Input, Select, Button, Card, Typography, Row, Col, Space, Divider, Spin, message, DatePicker } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { useDemandStore } from '../../store/modules/demandStore';
 import CascadeAddressSelector from '../../components/CascadeAddressSelector';
+import FileUploader from '../../components/FileUploader';
+import moment from 'moment';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -13,6 +15,10 @@ const INeedForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  
+  // 文件上传相关状态
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileUploading, setFileUploading] = useState(false);
   
   // 判断是创建还是编辑模式
   const isEditMode = !!id;
@@ -68,17 +74,23 @@ const INeedForm = () => {
   };
 
   // 提交表单
-  const handleSubmit = () => {
-    form.validateFields().then(values => {
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      
       // 处理地址数据
       const addressData = values.address || {};
       const fullAddress = addressData.fullAddress || '';
       
+      // 处理时间数据
+      const endTime = values.endTime ? values.endTime.endOf('day').toISOString() : new Date(Date.now() + 86400000).toISOString();
+      
       const submitData = {
         ...values,
         address: fullAddress, // 使用完整地址字符串
+        endTime: endTime, // 转换为ISO字符串格式
         // 映射前端字段到API字段
-        locationId: addressData.item || 1, // 使用选择的区县ID作为locationId
+        locationId: addressData.itemId || 1, // 使用选择的区县ID作为locationId
       };
       
       // 移除address对象，只保留字符串地址
@@ -87,19 +99,94 @@ const INeedForm = () => {
       
       if (isEditMode && id) {
         // 编辑需求
-        updateDemand(id, submitData);
-        message.success('需求更新成功');
-        navigate('/i-need');
+        try {
+          console.log('开始更新需求，ID:', id, '数据:', submitData);
+          await updateDemand(id, submitData);
+          console.log('需求更新成功');
+          
+          // 如果有选中的文件，上传文件
+          if (selectedFile) {
+            console.log('[DEBUG] INeedForm: starting file upload for:', { fileName: selectedFile.name, demandId: id });
+            setFileUploading(true);
+            
+            try {
+              // 使用 uploadDemandFile API 直接上传文件
+              console.log('[DEBUG] INeedForm: importing uploadDemandFile API');
+              const { uploadDemandFile } = await import('../../api/modules/demandFile');
+              
+              console.log('[DEBUG] INeedForm: calling uploadDemandFile with progress callback');
+              const fileUploadResult = await uploadDemandFile(id, selectedFile, {
+                onProgress: (progress) => {
+                  console.log('[DEBUG] INeedForm: file upload progress:', progress + '%');
+                }
+              });
+              
+              console.log('[DEBUG] INeedForm: file upload completed successfully:', fileUploadResult);
+              message.success('需求更新成功，文件已上传');
+            } catch (fileError) {
+              console.error('[DEBUG] INeedForm: file upload failed:', fileError);
+              message.warning('需求更新成功，但文件上传失败，请稍后重试');
+            } finally {
+              console.log('[DEBUG] INeedForm: file upload finished');
+              setFileUploading(false);
+            }
+          } else {
+            console.log('[DEBUG] INeedForm: no file to upload, demand updated successfully');
+            message.success('需求更新成功');
+          }
+          
+          navigate('/i-need');
+        } catch (error) {
+          console.error('更新需求失败:', error);
+          message.error('更新需求失败，请重试');
+        }
       } else {
         // 创建新需求
-        createDemand(submitData);
-        message.success('需求创建成功');
-        navigate('/i-need');
+        try {
+          const demandResult = await createDemand(submitData);
+          console.log('需求创建成功:', demandResult);
+          
+          // 如果有选中的文件，上传文件
+          if (selectedFile) {
+            console.log('[DEBUG] INeedForm: starting file upload for:', { fileName: selectedFile.name, demandId: demandResult.id });
+            setFileUploading(true);
+            
+            try {
+              // 使用 uploadDemandFile API 直接上传文件
+              console.log('[DEBUG] INeedForm: importing uploadDemandFile API');
+              const { uploadDemandFile } = await import('../../api/modules/demandFile');
+              
+              console.log('[DEBUG] INeedForm: calling uploadDemandFile with progress callback');
+              const fileUploadResult = await uploadDemandFile(demandResult.id, selectedFile, {
+                onProgress: (progress) => {
+                  console.log('[DEBUG] INeedForm: file upload progress:', progress + '%');
+                }
+              });
+              
+              console.log('[DEBUG] INeedForm: file upload completed successfully:', fileUploadResult);
+              message.success('需求创建成功，文件已上传');
+            } catch (fileError) {
+              console.error('[DEBUG] INeedForm: file upload failed:', fileError);
+              message.warning('需求创建成功，但文件上传失败，请稍后重试');
+            } finally {
+              console.log('[DEBUG] INeedForm: file upload finished');
+              setFileUploading(false);
+            }
+          } else {
+            console.log('[DEBUG] INeedForm: no file to upload, demand created successfully');
+            message.success('需求创建成功');
+          }
+          
+          navigate('/i-need');
+        } catch (error) {
+          console.error('创建需求失败:', error);
+          message.error('创建需求失败，请重试');
+        }
       }
-    }).catch(errorInfo => {
+    } catch (errorInfo) {
       console.log('表单验证失败:', errorInfo);
       message.error('表单验证失败，请检查填写内容');
-    });
+    }
   };
 
   // 表单验证规则
@@ -179,7 +266,8 @@ const INeedForm = () => {
             title: '',
             description: '',
             address: {},
-            status: '待处理'
+            status: '待处理',
+            endTime: moment().add(1, 'day') // 默认结束时间为明天
           }}
         >
           <Row gutter={[16, 16]}>
@@ -235,6 +323,59 @@ const INeedForm = () => {
                 <CascadeAddressSelector />
               </Form.Item>
             </Col>
+
+            {/* 结束时间 */}
+            <Col xs={24} sm={24} md={12} lg={12} xl={8}>
+              <Form.Item
+                name="endTime"
+                label="结束时间"
+                rules={[
+                  {
+                    validator: (_, value) => {
+                      if (!value || !moment.isMoment(value) || !value.isValid()) {
+                        return Promise.reject(new Error('请选择结束时间'));
+                      }
+                      return Promise.resolve();
+                    },
+                    trigger: 'change'
+                  }
+                ]}
+              >
+                <DatePicker
+                  placeholder="请选择结束时间"
+                  style={{ width: '100%' }}
+                  format="YYYY-MM-DD"
+                  disabledDate={(current) => {
+                    // 禁止选择过去的时间
+                    return current && current < moment().startOf('day');
+                  }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* 文件上传组件 */}
+          <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+            <Col xs={24} sm={24} md={24} lg={24} xl={24}>
+              <Form.Item label="附件上传">
+                <FileUploader
+                  onUpload={(file, options) => {
+                    console.log('[DEBUG] INeedForm FileUploader onUpload called:', { fileName: file.name, fileSize: file.size, options });
+                    setSelectedFile(file);
+                    message.success('文件已选择，将在提交时上传');
+                    console.log('[DEBUG] INeedForm: file selected and stored for later upload:', file.name);
+                    return Promise.resolve({ success: true, file });
+                  }}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.svg"
+                  maxSize={20 * 1024 * 1024} // 20MB
+                  multiple={false}
+                  showFileList={true}
+                />
+                <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
+                  支持上传PDF、Word、Excel、PPT、图片等文件，最大20MB
+                </div>
+              </Form.Item>
+            </Col>
           </Row>
 
           <Divider />
@@ -253,7 +394,7 @@ const INeedForm = () => {
                 type="primary" 
                 size="large"
                 icon={<SaveOutlined />}
-                loading={loading}
+                loading={loading || fileUploading}
                 onClick={handleSubmit}
               >
                 {isEditMode ? '保存修改' : '创建需求'}

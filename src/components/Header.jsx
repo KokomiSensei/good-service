@@ -25,10 +25,11 @@ const AppHeader = () => {
       key: "i-serve",
       label: <Link to="/i-serve">我服务</Link>,
     },
-    {
+    // 只有admin用户才能看到统计分析菜单
+    ...(isLoggedIn && userInfo?.username === 'admin' ? [{
       key: "analytics",
       label: <Link to="/analytics">统计分析</Link>,
-    },
+    }] : []),
     {
       key: "about",
       label: <Link to="/about">关于我们</Link>,
@@ -126,7 +127,7 @@ const AppHeader = () => {
                         <span
                           style={{ color: antdTheme.token.colorTextSecondary }}
                         >
-                          {userInfo.username || "用户"}
+                          {userInfo?.username || "用户"}
                         </span>
                       </div>
                     </Dropdown>

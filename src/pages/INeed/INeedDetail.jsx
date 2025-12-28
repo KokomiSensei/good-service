@@ -152,21 +152,19 @@ const INeedDetail = () => {
       {/* 需求详情卡片 */}
       <Card title="需求详情" bordered={true} style={{ marginBottom: 24 }}>
         <Descriptions bordered column={1}>
-          <Descriptions.Item label="需求ID">{currentDemand.id}</Descriptions.Item>
           <Descriptions.Item label="服务类型">{currentDemand.type}</Descriptions.Item>
           <Descriptions.Item label="需求标题">{currentDemand.title}</Descriptions.Item>
           <Descriptions.Item label="需求描述">{currentDemand.description}</Descriptions.Item>
           <Descriptions.Item label="状态">
-            <Tag color="default" style={{ backgroundColor: '#f0f0f0' }}>
+            <Tag color={statusColorMap[currentDemand.status]}>
               {currentDemand.status}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="地址">{currentDemand.address}</Descriptions.Item>
           <Descriptions.Item label="创建时间">
-            {new Date(currentDemand.createTime).toLocaleString()}
+            {currentDemand.createTime ? new Date(currentDemand.createTime).toLocaleString() : '暂无数据'}
           </Descriptions.Item>
           <Descriptions.Item label="更新时间">
-            {new Date(currentDemand.updateTime).toLocaleString()}
+            {currentDemand.updateTime ? new Date(currentDemand.updateTime).toLocaleString() : '暂无数据'}
           </Descriptions.Item>
         </Descriptions>
       </Card>
@@ -226,7 +224,7 @@ const INeedDetail = () => {
                           {response.status || 'PUBLISHED'}
                         </Tag>
                         <Text type="secondary" style={{ fontSize: '12px' }}>
-                          {new Date(response.createTime).toLocaleString()}
+                          {response.createdAt}
                         </Text>
                         <Button
                           type="default"
@@ -271,7 +269,7 @@ const INeedDetail = () => {
               <Space direction="vertical" style={{ width: '100%' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Text strong>创建需求</Text>
-                  <Text type="secondary">{new Date(currentDemand.createTime).toLocaleString()}</Text>
+                  <Text type="secondary">{currentDemand.createTime ? new Date(currentDemand.createTime).toLocaleString() : '暂无数据'}</Text>
                 </div>
                 <div>
                   <Text>服务类型：{currentDemand.type}</Text>
@@ -299,7 +297,7 @@ const INeedDetail = () => {
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text strong>更新状态</Text>
-                      <Text type="secondary">{new Date(currentDemand.updateTime).toLocaleString()}</Text>
+                      <Text type="secondary">{currentDemand.updateTime ? new Date(currentDemand.updateTime).toLocaleString() : '暂无数据'}</Text>
                     </div>
                     <div>
                       <Text>状态变更为：</Text>
@@ -329,7 +327,7 @@ const INeedDetail = () => {
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text strong>需求完成</Text>
-                      <Text type="secondary">{new Date(currentDemand.updateTime).toLocaleString()}</Text>
+                      <Text type="secondary">{currentDemand.updateTime ? new Date(currentDemand.updateTime).toLocaleString() : '暂无数据'}</Text>
                     </div>
                     <div>
                       <Text>需求已成功完成处理</Text>

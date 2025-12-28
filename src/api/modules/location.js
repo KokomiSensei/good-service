@@ -46,9 +46,25 @@ export const getItems = (cityId) => {
  * @returns {Promise} 搜索结果
  */
 export const searchLocations = (keyword) => {
-  return request({
-    url: '/locations/search',
-    method: 'get',
-    params: { keyword },
+  console.log('搜索关键词:', keyword);
+  
+  // 使用原生fetch API来完全控制URL格式
+  const baseURL = process.env.NODE_ENV === 'development' 
+    ? "http://10.29.127.241:8080/api" 
+    : "/api";
+  
+  const url = `${baseURL}/locations/search?keyword=${keyword}`;
+  console.log('完整请求URL:', url);
+  
+  return fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }).then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
   });
 };

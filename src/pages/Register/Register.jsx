@@ -1,10 +1,8 @@
-import React from "react";
-import { Form, Input, Button, Card, Typography, message } from "antd";
+import React, { useState } from "react";
+import { Form, Input, Button, Card, Typography, message, Switch, Space } from "antd";
 import {
   UserOutlined,
   LockOutlined,
-  MailOutlined,
-  PhoneOutlined,
 } from "@ant-design/icons";
 import { useNavigate, Link } from "react-router-dom";
 import { useUserStore } from "../../store/modules/userStore";
@@ -17,17 +15,20 @@ const { Title, Text } = Typography;
 const Register = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const { register, loading, error, clearError } = useUserStore();
+  const [isAdminRegistration, setIsAdminRegistration] = useState(false);
+  const { register, registerAdmin, loading, error, clearError } = useUserStore();
 
   const onFinish = async (values) => {
     clearError();
-    const success = await register(values);
+    const success = isAdminRegistration 
+      ? await registerAdmin(values)
+      : await register(values);
 
     if (success) {
-      message.success("注册成功");
+      message.success(isAdminRegistration ? "管理员注册成功" : "注册成功");
       navigate("/login");
     } else {
-      message.error(error || "注册失败");
+      message.error(error || (isAdminRegistration ? "管理员注册失败" : "注册失败"));
     }
   };
 
@@ -62,6 +63,20 @@ const Register = () => {
           </Text>
         </div>
 
+        {/* 管理员注册切换 */}
+        <div style={{ marginBottom: "24px", textAlign: "center" }}>
+          <Space>
+            <Text style={{ color: "var(--text-main)" }}>普通用户</Text>
+            <Switch
+              checked={isAdminRegistration}
+              onChange={setIsAdminRegistration}
+              checkedChildren="管理员"
+              unCheckedChildren="用户"
+            />
+            <Text style={{ color: "var(--text-main)" }}>管理员</Text>
+          </Space>
+        </div>
+
         <Form form={form} name="register" onFinish={onFinish} layout="vertical">
           <Form.Item
             name="username"
@@ -71,44 +86,6 @@ const Register = () => {
             <Input
               prefix={<UserOutlined />}
               placeholder="请输入用户名"
-              style={{
-                borderColor: "var(--border-color)",
-                color: "var(--text-main)",
-              }}
-              placeholderStyle={{ color: "var(--text-disabled)" }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="email"
-            rules={[
-              { required: true, message: "请输入邮箱地址" },
-              { type: "email", message: "请输入有效的邮箱地址" },
-            ]}
-            label={<Text style={{ color: "var(--text-main)" }}>邮箱</Text>}
-          >
-            <Input
-              prefix={<MailOutlined />}
-              placeholder="请输入邮箱地址"
-              style={{
-                borderColor: "var(--border-color)",
-                color: "var(--text-main)",
-              }}
-              placeholderStyle={{ color: "var(--text-disabled)" }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="phone"
-            rules={[
-              { required: true, message: "请输入手机号码" },
-              { pattern: /^1[3-9]\d{9}$/, message: "请输入有效的手机号码" },
-            ]}
-            label={<Text style={{ color: "var(--text-main)" }}>手机号码</Text>}
-          >
-            <Input
-              prefix={<PhoneOutlined />}
-              placeholder="请输入手机号码"
               style={{
                 borderColor: "var(--border-color)",
                 color: "var(--text-main)",
@@ -128,33 +105,6 @@ const Register = () => {
             <Input.Password
               prefix={<LockOutlined />}
               placeholder="请输入密码"
-              style={{
-                borderColor: "var(--border-color)",
-                color: "var(--text-main)",
-              }}
-              placeholderStyle={{ color: "var(--text-disabled)" }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="confirmPassword"
-            dependencies={["password"]}
-            rules={[
-              { required: true, message: "请确认密码" },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue("password") === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error("两次输入的密码不一致"));
-                },
-              }),
-            ]}
-            label={<Text style={{ color: "var(--text-main)" }}>确认密码</Text>}
-          >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="请确认密码"
               style={{
                 borderColor: "var(--border-color)",
                 color: "var(--text-main)",
@@ -187,7 +137,7 @@ const Register = () => {
                 }
               }}
             >
-              注册
+              {isAdminRegistration ? "管理员注册" : "注册"}
             </Button>
           </Form.Item>
 

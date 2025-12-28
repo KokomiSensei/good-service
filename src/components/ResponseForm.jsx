@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography, Row, Col, Space, Divider, message, Spin } from 'antd';
 import { ArrowLeftOutlined, SendOutlined } from '@ant-design/icons';
@@ -14,16 +14,22 @@ const ResponseForm = ({ demandId, demandTitle, onSuccess }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   
+  
+  
   // 获取用户信息
   const { userInfo } = useUserStore();
 
   // 提交响应
   const handleSubmit = async () => {
+    console.log('[DEBUG] ResponseForm: handleSubmit called');
     try {
+      console.log('[DEBUG] ResponseForm: validating form fields');
       const values = await form.validateFields();
       
+      console.log('[DEBUG] ResponseForm: form validation successful, values:', values);
       setLoading(true);
       
+      // 第一步：提交响应数据（不包含文件信息）
       const responseData = {
         demandId: demandId || parseInt(id),
         title: values.title,
@@ -31,10 +37,12 @@ const ResponseForm = ({ demandId, demandTitle, onSuccess }) => {
         userId: userInfo?.id || 'unknown'
       };
       
-      console.log('提交响应数据:', responseData);
+      console.log('[DEBUG] ResponseForm: submitting response data:', responseData);
       
       try {
-        await submitResponse(responseData);
+        // 提交响应
+        const responseResult = await submitResponse(responseData);
+        console.log('响应提交成功:', responseResult);
         message.success('响应提交成功');
         
         // 重置表单
@@ -164,7 +172,7 @@ const ResponseForm = ({ demandId, demandTitle, onSuccess }) => {
       <Row justify="center" style={{ marginTop: 24 }}>
         <Col xs={24} sm={24} md={24} lg={24} xl={24} style={{ textAlign: 'center' }}>
           <Typography.Text type="secondary">
-            请详细填写您的响应信息，这将帮助需求发布者了解您能提供的服务
+            请详细填写您的响应信息并上传相关附件（可选），这将帮助需求发布者更好地了解您能提供的服务
           </Typography.Text>
         </Col>
       </Row>

@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatTime } from '../../utils/timeUtils';
+
 import {
   Card,
   Select,
@@ -110,10 +112,10 @@ const Demand = () => {
 
   // 状态标签颜色映射
   const statusColorMap = {
-    PUBLISHED: antdTheme.token.colorPrimary,    // 刚发布 - 蓝色
-    RESPONDED: antdTheme.token.colorWarning,    // 已响应 - 橙色
-    RESOLVED: antdTheme.token.colorSuccess,     // 已完成 - 绿色
-    CANCELLED: '#999999',                       // 已取消 - 灰色
+    PUBLISHED: "blue",    // 刚发布 - 蓝色
+    RESPONDED: "orange",    // 已响应 - 橙色
+    RESOLVED: "green",     // 已完成 - 绿色
+    CANCELLED: "gray",                       // 已取消 - 灰色
   };
 
   // 分页配置
@@ -276,7 +278,7 @@ const Demand = () => {
                           }}
                         >
                           <span>{demand.title}</span>
-                          <Tag color="default" style={{ backgroundColor: '#f0f0f0' }}>
+                          <Tag color={statusColorMap[demand.status] || 'default'}>
                             {demand.status}
                           </Tag>
                         </div>
@@ -306,19 +308,10 @@ const Demand = () => {
                       }}
                     >
                       <div style={{ marginBottom: 8 }}>
-                        <strong>服务ID:</strong> {demand.originalData?.serviceId || '未知'}
-                      </div>
-                      <div style={{ marginBottom: 8 }}>
                         <strong>服务类型:</strong> {demand.type}
                       </div>
                       <div style={{ marginBottom: 8, minHeight: 60 }}>
                         <strong>需求描述:</strong> {demand.description}
-                      </div>
-                      <div style={{ marginBottom: 8 }}>
-                        <strong>位置ID:</strong> {demand.originalData?.locationId || '未知'}
-                      </div>
-                      <div style={{ marginBottom: 8 }}>
-                        <strong>地址:</strong> {demand.address}
                       </div>
                       <div
                         style={{
@@ -329,7 +322,7 @@ const Demand = () => {
                       >
                         <strong>开始时间:</strong>{" "}
                         {demand.originalData?.startTime ? 
-                          new Date(demand.originalData.startTime.seconds * 1000).toLocaleString() : 
+                          new Date(demand.originalData.startTime).toLocaleString() : 
                           '未设置'
                         }
                       </div>
@@ -342,7 +335,7 @@ const Demand = () => {
                       >
                         <strong>结束时间:</strong>{" "}
                         {demand.originalData?.endTime ? 
-                          new Date(demand.originalData.endTime.seconds * 1000).toLocaleString() : 
+                          new Date(demand.originalData.endTime).toLocaleString('zh-CN') : 
                           '未设置'
                         }
                       </div>
@@ -354,7 +347,10 @@ const Demand = () => {
                         }}
                       >
                         <strong>创建时间:</strong>{" "}
-                        {new Date(demand.createTime).toLocaleString()}
+                        {demand.originalData?.createdAt? 
+                          formatTime(demand.originalData.createdAt, 'YYYY/MM/DD HH:mm:ss') : 
+                          '未设置'
+                        }
                       </div>
                       <div
                         style={{
@@ -364,7 +360,10 @@ const Demand = () => {
                         }}
                       >
                         <strong>更新时间:</strong>{" "}
-                        {new Date(demand.updateTime).toLocaleString()}
+                        {demand.originalData?.modifiedAt ? 
+                          formatTime(demand.originalData.modifiedAt, 'YYYY/MM/DD HH:mm:ss') : 
+                          '未设置'
+                        }
                       </div>
                     </Card>
                   </Col>

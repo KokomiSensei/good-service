@@ -33,6 +33,7 @@ const IServeResponseForm = () => {
     response: null,
   };
 
+
   // 从userStore获取用户状态
   const { isLoggedIn, userInfo } = useUserStore();
 
@@ -104,14 +105,38 @@ const IServeResponseForm = () => {
 
       if (isEdit && response) {
         // 修改响应
-        await updateServiceResponse(response.id, responseData);
-        message.success("响应更新成功");
-        navigate("/i-serve");
+        try {
+          await updateServiceResponse(response.id, responseData);
+          console.log('响应更新成功');
+          message.success('响应更新成功');
+          
+          // 重置表单
+          form.resetFields();
+          
+          // 导航回列表页面
+          navigate("/i-serve");
+          
+        } catch (error) {
+          console.error('更新响应失败:', error);
+          message.error('更新响应失败，请重试');
+        }
       } else {
         // 创建新响应
-        await createServiceResponse(responseData);
-        message.success("响应提交成功");
-        navigate("/i-serve");
+        try {
+          const responseResult = await createServiceResponse(responseData);
+          console.log('响应提交成功:', responseResult);
+          message.success('响应提交成功');
+          
+          // 重置表单
+          form.resetFields();
+          
+          // 导航回列表页面
+          navigate("/i-serve");
+          
+        } catch (error) {
+          console.error('提交响应失败:', error);
+          message.error('提交响应失败，请重试');
+        }
       }
     } catch (errorInfo) {
       if (errorInfo.errorFields) {
@@ -188,9 +213,6 @@ const IServeResponseForm = () => {
             </Col>
             <Col xs={24} sm={24} md={24} lg={24} xl={24}>
               <strong>需求描述:</strong> {currentDemand.description}
-            </Col>
-            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
-              <strong>地址:</strong> {currentDemand.address}
             </Col>
           </Row>
         </Card>

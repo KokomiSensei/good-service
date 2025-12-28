@@ -4,9 +4,22 @@ import { Card, Button, Typography, Row, Col, Tag, Descriptions, Space, Divider, 
 import { ArrowLeftOutlined, EditOutlined, SendOutlined } from '@ant-design/icons';
 import { useDemandStore } from '../../store/modules/demandStore';
 import { useUserStore } from '../../store/modules/userStore';
+import { formatTime } from '../../utils/timeUtils';
 import ResponseForm from '../../components/ResponseForm';
+import DemandFileViewer from '../../components/DemandFileViewer';
 
 const { Title, Text } = Typography;
+
+// 状态标签颜色映射
+const statusColorMap = {
+  PUBLISHED: '#1890ff',    // 刚发布 - 蓝色
+  RESPONDED: '#faad14',    // 已响应 - 橙色
+  RESOLVED: '#52c41a',     // 已完成 - 绿色
+  CANCELLED: '#999999',    // 已取消 - 灰色
+  待处理: '#1890ff',       // 待处理 - 蓝色
+  处理中: '#faad14',       // 处理中 - 橙色
+  已完成: '#52c41a',       // 已完成 - 绿色
+};
 
 const DemandDetail = () => {
   const { id } = useParams();
@@ -120,24 +133,26 @@ const DemandDetail = () => {
       {/* 需求详情卡片 */}
       <Card title="需求详情" bordered={true} style={{ marginBottom: 24 }}>
         <Descriptions bordered column={1}>
-          <Descriptions.Item label="需求ID">{currentDemand.id}</Descriptions.Item>
           <Descriptions.Item label="服务类型">{currentDemand.type}</Descriptions.Item>
           <Descriptions.Item label="需求标题">{currentDemand.title}</Descriptions.Item>
           <Descriptions.Item label="需求描述">{currentDemand.description}</Descriptions.Item>
           <Descriptions.Item label="状态">
-            <Tag color="default" style={{ backgroundColor: '#f0f0f0' }}>
+            <Tag color={statusColorMap[currentDemand.status] || 'default'}>
               {currentDemand.status}
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="地址">{currentDemand.address}</Descriptions.Item>
           <Descriptions.Item label="创建时间">
-            {new Date(currentDemand.createTime).toLocaleString()}
+            {formatTime(currentDemand.createTime, 'YYYY-MM-DD HH:mm:ss')}
           </Descriptions.Item>
           <Descriptions.Item label="更新时间">
-            {new Date(currentDemand.updateTime).toLocaleString()}
+            {formatTime(currentDemand.updateTime, 'YYYY-MM-DD HH:mm:ss')}
           </Descriptions.Item>
         </Descriptions>
       </Card>
+
+      {/* 相关文件 */}
+      <DemandFileViewer demandId={parseInt(id)} />
 
       {/* 操作历史记录 */}
       <Card title="操作记录" bordered={true}>
@@ -152,7 +167,7 @@ const DemandDetail = () => {
               <Space direction="vertical" style={{ width: '100%' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Text strong>创建需求</Text>
-                  <Text type="secondary">{new Date(currentDemand.createTime).toLocaleString()}</Text>
+                  <Text type="secondary">{formatTime(currentDemand.createTime, 'YYYY-MM-DD HH:mm:ss')}</Text>
                 </div>
                 <div>
                   <Text>服务类型：{currentDemand.type}</Text>
@@ -180,11 +195,11 @@ const DemandDetail = () => {
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text strong>更新状态</Text>
-                      <Text type="secondary">{new Date(currentDemand.updateTime).toLocaleString()}</Text>
+                      <Text type="secondary">{formatTime(currentDemand.updateTime, 'YYYY-MM-DD HH:mm:ss')}</Text>
                     </div>
                     <div>
                       <Text>状态变更为：</Text>
-                      <Tag color="default" style={{ backgroundColor: '#f0f0f0' }}>
+                      <Tag color={statusColorMap[currentDemand.status] || 'default'}>
                         {currentDemand.status}
                       </Tag>
                     </div>

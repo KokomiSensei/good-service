@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Space, Button, Modal, Descriptions, Tag, message, Image } from 'antd';
 import { FileOutlined, DownloadOutlined, EyeOutlined, PlayCircleOutlined } from '@ant-design/icons';
-import { getLatestDemandFile } from '../api/modules/demandFile';
+import { getLatestResponseFile } from '../api/modules/responseFile';
 
 /**
- * 需求文件查看组件
+ * 响应文件查看组件
  * 只用于查看和下载，不能上传或修改
  */
-const DemandFileViewer = ({ demandId, title = "相关文件" }) => {
+const ResponseFileViewer = ({ responseId, title = "响应文件" }) => {
   const [loading, setLoading] = useState(false);
   const [hasFile, setHasFile] = useState(false);
   const [fileInfo, setFileInfo] = useState(null);
@@ -16,12 +16,12 @@ const DemandFileViewer = ({ demandId, title = "相关文件" }) => {
 
   // 检查文件状态
   const checkFileStatus = async () => {
-    if (!demandId) return;
+    if (!responseId) return;
     
     setLoading(true);
     try {
-      const response = await getLatestDemandFile(demandId, false);
-      console.log('[DEBUG] DemandFileViewer checkFileStatus response:', response);
+      const response = await getLatestResponseFile(responseId, false);
+      console.log('[DEBUG] ResponseFileViewer checkFileStatus response:', response);
       
       // 处理二进制文件数据
       if (response) {
@@ -34,7 +34,7 @@ const DemandFileViewer = ({ demandId, title = "相关文件" }) => {
         
         setHasFile(true);
         setFileInfo({
-          filename: `demand_${demandId}_file`,
+          filename: `response_${responseId}_file`,
           size: blob.size,
           mimeType: blob.type,
           isImage: isImage,
@@ -66,7 +66,7 @@ const DemandFileViewer = ({ demandId, title = "相关文件" }) => {
 
   // 组件挂载时检查文件状态
   useEffect(() => {
-    if (demandId) {
+    if (responseId) {
       checkFileStatus();
     }
     
@@ -76,23 +76,23 @@ const DemandFileViewer = ({ demandId, title = "相关文件" }) => {
         window.URL.revokeObjectURL(imageUrl);
       }
     };
-  }, [demandId]);
+  }, [responseId]);
 
   // 文件下载处理
   const handleDownload = async () => {
-    if (!demandId) {
-      message.error('需求ID不能为空');
+    if (!responseId) {
+      message.error('响应ID不能为空');
       return;
     }
 
     try {
-      const response = await getLatestDemandFile(demandId, true);
+      const response = await getLatestResponseFile(responseId, true);
       
       // 创建临时链接进行下载
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `demand_${demandId}_file`);
+      link.setAttribute('download', `response_${responseId}_file`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -131,7 +131,7 @@ const DemandFileViewer = ({ demandId, title = "相关文件" }) => {
   };
 
   return (
-    <div className="demand-file-viewer">
+    <div className="response-file-viewer">
       <Card
         title={title}
         loading={loading}
@@ -302,4 +302,4 @@ const DemandFileViewer = ({ demandId, title = "相关文件" }) => {
   );
 };
 
-export default DemandFileViewer;
+export default ResponseFileViewer;

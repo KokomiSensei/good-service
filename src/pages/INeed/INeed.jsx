@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatTime } from '../../utils/timeUtils';
 import {
@@ -25,6 +25,7 @@ import {
 import ConfigProvider from "antd/es/config-provider";
 import { useDemandStore } from "../../store/modules/demandStore";
 import { useUserStore } from "../../store/modules/userStore";
+import { getLocationById } from "../../api/modules/location";
 import antdTheme from "../../config/theme";
 const { Title } = Typography;
 const { Option } = Select;
@@ -32,6 +33,9 @@ const { Search } = Input;
 
 const INeed = () => {
   const navigate = useNavigate();
+  
+  // 位置信息缓存
+  const [locationCache, setLocationCache] = useState({});
 
   // 从userStore获取用户状态
   const { isLoggedIn, userInfo } = useUserStore();
@@ -52,6 +56,32 @@ const INeed = () => {
     resetFilters,
   } = useDemandStore();
 
+  // 获取位置信息的函数
+  const fetchLocationName = async (locationId) => {
+    if (!locationId) return '';
+    
+    // 检查缓存
+    if (locationCache[locationId]) {
+      return locationCache[locationId];
+    }
+    
+    try {
+      const response = await getLocationById(locationId);
+      const locationName = response.data?.name || response.name || '';
+      
+      // 更新缓存
+      setLocationCache(prev => ({
+        ...prev,
+        [locationId]: locationName
+      }));
+      
+      return locationName;
+    } catch (error) {
+      console.error('获取位置信息失败:', error);
+      return '';
+    }
+  };
+
   // 初始化加载当前用户的所有需求
   useEffect(() => {
     const loadMyDemands = async () => {
@@ -71,6 +101,25 @@ const INeed = () => {
     
     loadMyDemands();
   }, [resetFilters, isLoggedIn, userInfo?.id, filterByUserId, navigate]);
+
+  // 当需求列表更新时，获取位置信息
+  useEffect(() => {
+    const loadLocationNames = async () => {
+      if (filteredDemands && filteredDemands.length > 0) {
+        const locationIds = filteredDemands
+          .filter(demand => demand.locationId && !locationCache[demand.locationId])
+          .map(demand => demand.locationId);
+        
+        if (locationIds.length > 0) {
+          for (const locationId of locationIds) {
+            await fetchLocationName(locationId);
+          }
+        }
+      }
+    };
+    
+    loadLocationNames();
+  }, [filteredDemands]);
 
   // 处理类型筛选
   const handleTypeChange = (type) => {
@@ -364,7 +413,13 @@ const INeed = () => {
                       <strong>需求描述:</strong> {demand.description}
                     </div>
                     <div style={{ marginBottom: 8 }}>
-                      <strong>地址:</strong> {demand.address}
+                      <strong>地址:</strong> {
+                        demand.locationId ? (
+                          locationCache[demand.locationId] || '加载中...'
+                        ) : (
+                          demand.address || '暂无地址'
+                        )
+                      }
                     </div>
                     <div
                       style={{

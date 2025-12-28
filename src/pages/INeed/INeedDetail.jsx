@@ -5,6 +5,7 @@ import { ArrowLeftOutlined, EditOutlined, UserOutlined, ClockCircleOutlined, Che
 import { useDemandStore } from '../../store/modules/demandStore';
 import { useUserStore } from '../../store/modules/userStore';
 import { getReceivedResponses, getResponseById } from '../../api/modules/response';
+import { getLocationById } from '../../api/modules/location';
 import ResponseDetailModal from '../../components/ResponseDetailModal';
 import antdTheme from '../../config/theme';
 
@@ -31,6 +32,9 @@ const INeedDetail = () => {
   // 响应详情弹窗状态
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState(null);
+  
+  // 位置信息状态
+  const [locationName, setLocationName] = useState('');
 
   // 加载需求详情
   useEffect(() => {
@@ -62,6 +66,27 @@ const INeedDetail = () => {
     };
     loadReceivedResponses();
   }, [id]);
+  
+  // 加载位置信息
+  useEffect(() => {
+    const loadLocationName = async () => {
+      if (currentDemand && currentDemand.locationId) {
+        try {
+          const response = await getLocationById(currentDemand.locationId);
+          const name = response.data?.name || response.name || '';
+          setLocationName(name);
+        } catch (error) {
+          console.error('获取位置信息失败:', error);
+          setLocationName('');
+        }
+      } else if (currentDemand && currentDemand.address) {
+        // 如果没有locationId但有address，则使用address
+        setLocationName(currentDemand.address);
+      }
+    };
+    
+    loadLocationName();
+  }, [currentDemand]);
 
   // 返回需求列表
   const handleBack = () => {
@@ -137,7 +162,7 @@ const INeedDetail = () => {
           </Button>
         </Col>
         <Col>
-                        {currentDemand.status === 'PUBLISHED' && currentDemand.userId === userInfo?.id && (
+   {true&&(
             <Button 
               type="primary" 
               icon={<EditOutlined />} 
@@ -155,6 +180,7 @@ const INeedDetail = () => {
           <Descriptions.Item label="服务类型">{currentDemand.type}</Descriptions.Item>
           <Descriptions.Item label="需求标题">{currentDemand.title}</Descriptions.Item>
           <Descriptions.Item label="需求描述">{currentDemand.description}</Descriptions.Item>
+          <Descriptions.Item label="地址">{locationName || '暂无地址'}</Descriptions.Item>
           <Descriptions.Item label="状态">
             <Tag color={statusColorMap[currentDemand.status]}>
               {currentDemand.status}

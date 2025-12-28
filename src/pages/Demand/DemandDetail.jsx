@@ -5,6 +5,7 @@ import { ArrowLeftOutlined, EditOutlined, SendOutlined } from '@ant-design/icons
 import { useDemandStore } from '../../store/modules/demandStore';
 import { useUserStore } from '../../store/modules/userStore';
 import { formatTime } from '../../utils/timeUtils';
+import { getLocationById } from '../../api/modules/location';
 import ResponseForm from '../../components/ResponseForm';
 import DemandFileViewer from '../../components/DemandFileViewer';
 
@@ -26,6 +27,9 @@ const DemandDetail = () => {
   const navigate = useNavigate();
   const [showResponseForm, setShowResponseForm] = useState(false);
   
+  // 位置信息状态
+  const [locationName, setLocationName] = useState('');
+  
   // 从store获取状态和方法
   const {
     currentDemand,
@@ -45,6 +49,27 @@ const DemandDetail = () => {
     };
     loadDemandDetail();
   }, [id, getDemandById]);
+  
+  // 加载位置信息
+  useEffect(() => {
+    const loadLocationName = async () => {
+      if (currentDemand && currentDemand.locationId) {
+        try {
+          const response = await getLocationById(currentDemand.locationId);
+          const name = response.data?.name || response.name || '';
+          setLocationName(name);
+        } catch (error) {
+          console.error('获取位置信息失败:', error);
+          setLocationName('');
+        }
+      } else if (currentDemand && currentDemand.address) {
+        // 如果没有locationId但有address，则使用address
+        setLocationName(currentDemand.address);
+      }
+    };
+    
+    loadLocationName();
+  }, [currentDemand]);
 
   // 返回需求列表
   const handleBack = () => {
@@ -141,7 +166,7 @@ const DemandDetail = () => {
               {currentDemand.status}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="地址">{currentDemand.address}</Descriptions.Item>
+          <Descriptions.Item label="地址">{locationName || '暂无地址'}</Descriptions.Item>
           <Descriptions.Item label="创建时间">
             {formatTime(currentDemand.createTime, 'YYYY-MM-DD HH:mm:ss')}
           </Descriptions.Item>

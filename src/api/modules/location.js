@@ -68,3 +68,15 @@ export const searchLocations = (keyword) => {
     return response.json();
   });
 };
+
+/**
+ * 根据位置ID获取位置信息
+ * @param {number} locationId - 位置ID
+ * @returns {Promise} 位置信息
+ */
+export const getLocationById = (locationId) => {
+  return request({
+    url: `/locations/location/${locationId}`,
+    method: 'get',
+  });
+};

@@ -165,31 +165,7 @@ const Profile = () => {
             </div>
             
             <Divider />
-            
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <div>
-                <Text strong>用户名：</Text>
-                <Text>{userInfo?.username}</Text>
-              </div>
-              <div>
-                <Text strong>注册时间：</Text>
-                <Text>
-                  {userInfo?.createdAt 
-                    ? new Date(userInfo.createdAt).toLocaleDateString()
-                    : '未知'
-                  }
-                </Text>
-              </div>
-              <div>
-                <Text strong>最后更新：</Text>
-                <Text>
-                  {userDetails?.updatedAt || userInfo?.updatedAt
-                    ? new Date((userDetails?.updatedAt || userInfo?.updatedAt)).toLocaleDateString()
-                    : '未知'
-                  }
-                </Text>
-              </div>
-            </Space>
+
           </Card>
         </Col>
 

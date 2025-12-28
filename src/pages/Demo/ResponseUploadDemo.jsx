@@ -41,7 +41,7 @@ const ResponseUploadDemo = () => {
           <DemandFileUploader
             demandId={demandId}
             title="响应附件"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.svg"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.svg,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv"
             maxSize={20 * 1024 * 1024}
             onFileChange={(action, file) => {
               message.success(`文件${action}操作完成`);
@@ -120,7 +120,7 @@ const ResponseUploadDemo = () => {
               <DemandFileUploader
                 demandId={demandId}
                 title="响应附件"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.svg"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.svg,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv"
                 maxSize={20 * 1024 * 1024}
                 onFileChange={(action, file) => {
                   message.success(`文件${action}操作完成`);

@@ -37,7 +37,7 @@ const FileUploadDemo = () => {
   const handleCustomUpload = async (file) => {
     try {
       const result = await uploadFile(file, {
-        accept: '.pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif',
+        accept: '.pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv',
         maxSize: 20 * 1024 * 1024 // 20MB
       });
       console.log('上传成功:', result);
@@ -78,7 +78,7 @@ const FileUploadDemo = () => {
                 <h3>单文件上传</h3>
                 <FileUploader
                   onUpload={handleCustomUpload}
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv"
                   maxSize={20 * 1024 * 1024}
                   multiple={false}
                   showFileList={true}
@@ -109,7 +109,7 @@ const FileUploadDemo = () => {
              <DemandFileUploader
                demandId={demandId}
                title={`需求 ${demandId} 文件管理`}
-               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.svg"
+               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.svg,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv"
                maxSize={50 * 1024 * 1024}
                onFileChange={handleFileChange}
              />

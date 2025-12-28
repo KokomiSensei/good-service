@@ -4,6 +4,8 @@ import { Form, Input, Button, Card, Typography, Row, Col, Space, Divider, messag
 import { ArrowLeftOutlined, SendOutlined } from '@ant-design/icons';
 import { useUserStore } from '../store/modules/userStore';
 import { submitResponse } from '../api/modules/response';
+import { uploadResponseFile } from '../api/modules/responseFile';
+import FileUploader from './FileUploader';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -13,8 +15,8 @@ const ResponseForm = ({ demandId, demandTitle, onSuccess }) => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  
-  
+  const [fileUploading, setFileUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   
   // 获取用户信息
   const { userInfo } = useUserStore();
@@ -29,7 +31,7 @@ const ResponseForm = ({ demandId, demandTitle, onSuccess }) => {
       console.log('[DEBUG] ResponseForm: form validation successful, values:', values);
       setLoading(true);
       
-      // 第一步：提交响应数据（不包含文件信息）
+      // 第一步：提交响应数据
       const responseData = {
         demandId: demandId || parseInt(id),
         title: values.title,
@@ -43,14 +45,37 @@ const ResponseForm = ({ demandId, demandTitle, onSuccess }) => {
         // 提交响应
         const responseResult = await submitResponse(responseData);
         console.log('响应提交成功:', responseResult);
-        message.success('响应提交成功');
         
-        // 重置表单
+        // 第二步：如果有选择的文件，上传文件
+        if (selectedFile && responseResult && responseResult.id) {
+          console.log('[DEBUG] ResponseForm: uploading file to response', responseResult.id);
+          setFileUploading(true);
+          
+          try {
+            await uploadResponseFile(responseResult.id, selectedFile, {
+              onProgress: (progress) => {
+                console.log('[DEBUG] File upload progress:', progress + '%');
+              }
+            });
+            console.log('[DEBUG] ResponseForm: file upload successful');
+            message.success('响应和文件都保存成功');
+          } catch (fileError) {
+            console.error('文件上传失败:', fileError);
+            message.warning('响应提交成功，但文件上传失败: ' + (fileError.message || '未知错误'));
+          } finally {
+            setFileUploading(false);
+          }
+        } else {
+          message.success('响应提交成功');
+        }
+        
+        // 重置表单和文件状态
         form.resetFields();
+        setSelectedFile(null);
         
         // 调用成功回调
         if (onSuccess) {
-          onSuccess();
+          onSuccess(responseResult);
         }
         
       } catch (error) {
@@ -142,6 +167,30 @@ const ResponseForm = ({ demandId, demandTitle, onSuccess }) => {
             </Col>
           </Row>
 
+          {/* 文件上传区域 */}
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={24} md={24} lg={24} xl={24}>
+              <Form.Item label="附件上传">
+                <FileUploader
+                  onUpload={(file, options) => {
+                    console.log('[DEBUG] ResponseForm FileUploader onUpload called:', { fileName: file.name, fileSize: file.size, options });
+                    setSelectedFile(file);
+                    message.success('文件已选择，将在提交时上传');
+                    console.log('[DEBUG] ResponseForm: file selected and stored for later upload:', file.name);
+                    return Promise.resolve({ success: true, file });
+                  }}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.svg,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv"
+                  maxSize={50 * 1024 * 1024} // 50MB
+                  multiple={false}
+                  showFileList={true}
+                />
+                <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
+                  支持上传PDF、Word、Excel、PPT、图片、视频等文件，最大50MB
+                </div>
+              </Form.Item>
+            </Col>
+          </Row>
+
           <Divider />
 
           {/* 提交按钮 */}
@@ -158,7 +207,7 @@ const ResponseForm = ({ demandId, demandTitle, onSuccess }) => {
                 type="primary" 
                 size="large"
                 icon={<SendOutlined />}
-                loading={loading}
+                loading={loading || fileUploading}
                 onClick={handleSubmit}
               >
                 提交响应

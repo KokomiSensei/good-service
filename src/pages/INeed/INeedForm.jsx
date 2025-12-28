@@ -366,7 +366,7 @@ const INeedForm = () => {
                     console.log('[DEBUG] INeedForm: file selected and stored for later upload:', file.name);
                     return Promise.resolve({ success: true, file });
                   }}
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.svg"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.svg,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv"
                   maxSize={20 * 1024 * 1024} // 20MB
                   multiple={false}
                   showFileList={true}

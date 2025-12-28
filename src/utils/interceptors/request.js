@@ -1,5 +1,7 @@
 // 请求拦截器
 export const requestInterceptor = (config) => {
+  console.log('🚀 请求拦截器 - 发起请求:', config.method?.toUpperCase(), config.url);
+  
   // 从本地存储获取token（不直接使用useStore避免hook调用限制）
   try {
     const userStorage = localStorage.getItem('user-storage');

@@ -30,6 +30,9 @@ export * from './modules/file';
 // 需求文件上传相关API
 export * from './modules/demandFile';
 
+// 响应文件上传相关API
+export * from './modules/responseFile';
+
 // 导入所有API模块
 import * as authAPI from './modules/auth';
 import * as userAPI from './modules/user';
@@ -40,6 +43,7 @@ import * as demandAPI from './modules/demand';
 import * as statisticsAPI from './modules/statistics';
 import * as fileAPI from './modules/file';
 import * as demandFileAPI from './modules/demandFile';
+import * as responseFileAPI from './modules/responseFile';
 
 // 统一API对象
 const API = {
@@ -52,6 +56,7 @@ const API = {
   statistics: statisticsAPI,
   file: fileAPI,
   demandFile: demandFileAPI,
+  responseFile: responseFileAPI,
 };
 
 export default API;

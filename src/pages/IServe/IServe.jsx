@@ -35,7 +35,7 @@ const statusColorMap = {
   RESPONDED: 'orange',    // 已响应 - 橙色
   RESOLVED: 'green',     // 已完成 - 绿色
   CANCELLED: '#999999',    // 已取消 - 灰色
-  待处理: '#1890ff',       // 待处理 - 蓝色
+  ACCEPTED: '#1890ff',       // 待处理 - 蓝色
   PENDING: '#faad14',       // 处理中 - 橙色
   已完成: '#52c41a',       // 已完成 - 绿色
 };
@@ -119,7 +119,7 @@ const IServe = () => {
   // 表格列定义
   const columns = [
     {
-      title: "需求标题",
+      title: "响应标题",
       dataIndex: "demandTitle",
       key: "demandTitle",
       ellipsis: true,
@@ -316,9 +316,6 @@ const IServe = () => {
       <div style={{ textAlign: "center", color: "#999" }}>
         <Typography.Text>您可以查看、修改和删除您的响应</Typography.Text>
         <br />
-        <Typography.Text type="secondary">
-          注意：只有状态为"待审核"的响应可以修改和删除
-        </Typography.Text>
       </div>
     </div>
   );

@@ -97,7 +97,7 @@ export const getResponseById = (responseId) => {
 export const updateResponse = (responseId, responseData) => {
   return request({
     url: `/responses/${responseId}`,
-    method: 'patch',
+    method: 'put',
     data: responseData,
   });
 };
